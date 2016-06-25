@@ -1,2 +1,2 @@
 # PIR_Sensor
-Diagrama fritzing con el codigo para arduino
+Esta es una alarma la cual utiliza un sensor PIR, ver diagrama fritzing, el cual podemos utilizar de modelo para conectar nuestro sensor de presencia PIR, este activa un buzzer al detectar el movimiento y enciende dos led color rojos los cuales estan intermitentes uno despues del otro. Tambien se incluyo unos pulsadores los cuales deben ser precionados ambos para resetear la alarma. El codigo para arduino esta incluido tambien.
