@@ -1,3 +1,9 @@
+#include "SPI.h"
+#include "MFRC522.h"
+
+#define SS_PIN 10
+#define RST_PIN 9
+
 int pir =2;
 int pirState;
 int red1=3;
@@ -12,9 +18,14 @@ int sensorMQ2 = A0;
 int sensorMQ2Valores = 0;
 int limiteMQ2 = 1300;
 
+MFRC522 rfid(SS_PIN, RST_PIN);
+
+MFRC522::MIFARE_Key key;
 
 void setup() {
   Serial.begin(9600);
+  SPI.begin();
+  rfid.PCD_Init();
   pinMode(pir, INPUT);
   pinMode(red1, OUTPUT);
   pinMode(red2, OUTPUT);
@@ -30,6 +41,54 @@ void loop() {
   Serial.println("Valor actual MQ-2: ");
   Serial.println(sensorMQ2Valores, DEC);
   x=0;
+
+  if (!rfid.PICC_IsNewCardPresent() || !rfid.PICC_ReadCardSerial())
+    return;
+
+  // Serial.print(F("PICC type: "));
+  MFRC522::PICC_Type piccType = rfid.PICC_GetType(rfid.uid.sak);
+  // Serial.println(rfid.PICC_GetTypeName(piccType));
+
+  // Check is the PICC of Classic MIFARE type
+  if (piccType != MFRC522::PICC_TYPE_MIFARE_MINI &&
+    piccType != MFRC522::PICC_TYPE_MIFARE_1K &&
+    piccType != MFRC522::PICC_TYPE_MIFARE_4K) {
+    Serial.println(F("Your tag is not of type MIFARE Classic."));
+    return;
+  }
+
+  String strID = "";
+  for (byte i = 0; i < 4; i++) {
+    strID +=
+    (rfid.uid.uidByte[i] < 0x10 ? "0" : "") +
+    String(rfid.uid.uidByte[i], HEX) +
+    (i!=3 ? ":" : "");
+  }
+  strID.toUpperCase();
+
+  Serial.print("Tap card key: ");
+  Serial.println(strID);
+
+  // Test Led
+  if (strID.indexOf("E4:0A:BA:EB") >= 0) {
+     while(x!=1){
+        alarm(300,160);
+           
+           buttonState = digitalRead(pushbutton);
+           if(buttonState==HIGH){
+              count+=1;
+            }     
+            if(count==1){
+		x=1;
+              stopalarm();
+              count=0;
+              delay(1000);            
+              }
+        }
+  }
+
+  rfid.PICC_HaltA();
+  rfid.PCD_StopCrypto1();
   if(pirState==HIGH){
       while(x!=1){
         alarm(300,160);
@@ -46,17 +105,24 @@ void loop() {
               }
         }
   }
-  else if(pirState==LOW){
-    stopalarm();
-  }
   else if(sensorMQ2Valores >= limiteMQ2) {
-    digitalWrite(speaker, HIGH);
-    delay(200);
-    digitalWrite(speaker, LOW);
-    delay(200);
+     while(x!=1){
+        alarm(300,160);
+           
+           buttonState = digitalRead(pushbutton);
+           if(buttonState==HIGH){
+              count+=1;
+            }     
+            if(count==1){
+		x=1;
+              stopalarm();
+              count=0;
+              delay(1000);            
+              }
+        }
   }
-  else if(sensorMQ2Valores < limiteMQ2){
-    digitalWrite(speaker, LOW);
+  else{
+    stopalarm();
   }      
 }
 
